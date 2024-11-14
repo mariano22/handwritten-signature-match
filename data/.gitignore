@@ -1,0 +1,5 @@
+*.rar
+*.tar.xz
+*.zip
+./signature-dataset
+./mnist
