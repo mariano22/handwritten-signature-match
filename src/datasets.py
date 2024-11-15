@@ -14,14 +14,14 @@ SIGCOMP2009_REGEX_Y_GROUP = [ 2, 3 ]
 
 SIGCOMP2009_CLASS_TAGS = [ 'NISDCC-', 'NFI-' ]
     
-def sigcomp2009(only_orignals=True, valid=False):
+def sigcomp2009(only_orignals=True, train=True):
     def match(fp, i): 
-        return re.match(SIGCOMP2009_REGEXES[valid], os.path.basename(fp)).group(i)
+        return re.match(SIGCOMP2009_REGEXES[train], os.path.basename(fp)).group(i)
             
-    files = [f for f in glob.glob(SIGCOMP2009_FILE_PATHS[valid]+'/*') if f.endswith('png') or f.endswith('PNG') ]
+    files = [f for f in glob.glob(SIGCOMP2009_FILE_PATHS[train]+'/*') if f.endswith('png') or f.endswith('PNG') ]
     if only_orignals:
-        files = [ f for f in files if match(f, SIGCOMP2009_REGEX_Y_GROUP[valid]) ==  match(f, 1)]
-    cls = [ SIGCOMP2009_CLASS_TAGS[valid] + match(f, SIGCOMP2009_REGEX_Y_GROUP[valid]) for f in files ]
+        files = [ f for f in files if match(f, SIGCOMP2009_REGEX_Y_GROUP[train]) ==  match(f, 1)]
+    cls = [ SIGCOMP2009_CLASS_TAGS[train] + match(f, SIGCOMP2009_REGEX_Y_GROUP[train]) for f in files ]
     return list(zip(files,cls))
 
 # MNIST
