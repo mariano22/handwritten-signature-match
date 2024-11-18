@@ -42,7 +42,7 @@ def show_pair(e):
     for ax,x in zip(axes,e[:2]):
         if isinstance(x,str):
             img = plt.cm.gray(mpimg.imread(x))
-        elif isinstance(x[0],torch.Tensor):
+        elif isinstance(x,torch.Tensor):
             img = showable(x)
         else:
             img = x

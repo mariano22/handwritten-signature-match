@@ -17,20 +17,6 @@ def show_grid(images, subtitles, figsize):
     plt.show()
     return fig
 
-# Make a tensor ready to be displayed
-def showable(t):
-    t = t.detach().cpu()
-    # it assumes it was normalized with Imagenet stats
-    inverse_transform = transforms.Compose([
-        transforms.Normalize(mean=[0,0,0], std=[1/0.229, 1/0.224, 1/0.225]),
-        transforms.Normalize(mean=[-0.485, -0.456, -0.406], std=[1,1,1]),
-    ])
-    if t.min()<0:
-        t = inverse_transform(t)
-    if t.size(0) == 3:
-        t = t.permute(1, 2, 0)
-    return t
-
 def mark_img(img, x, y,w=7, c=0):
     """ 
     Draw a point mark of w width in (x,y) in the image choosing color c.
