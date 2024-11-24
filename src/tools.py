@@ -44,3 +44,9 @@ def get_y_vocab(ds):
     stoi = {y:i for i,y in enumerate(itos)}
     return itos, stoi
 
+def shapes(l):
+    return [x.shape for x in l]
+
+def get_encoder_out_dim(encoder, sample):
+    with torch.no_grad():
+        return encoder(sample).shape[-1]
