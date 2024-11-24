@@ -31,6 +31,7 @@ def mnist():
         torchvision.datasets.MNIST('./data/mnist/', download=True),
         torchvision.datasets.MNIST('./data/mnist/', download=True, train=False),
     ])
+    
     return ds
 
 # Omniglot

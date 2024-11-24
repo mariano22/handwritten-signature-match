@@ -4,6 +4,7 @@ import matplotlib.image as mpimg
 import numpy as np
 import torch
 import torchvision.transforms as transforms
+import cv2
 
 def group_by_y(ds):
     gds = defaultdict(list)
@@ -17,39 +18,29 @@ def split_ds(ds, is_valid):
         (train,valid)[is_valid(x)].append(x)
     return train,valid
 
-# Make a tensor ready to be displayed
-def showable(t):
-    t = t.detach().cpu()
-    # it assumes it was normalized with Imagenet stats
-    inverse_transform = transforms.Compose([
-        transforms.Normalize(mean=[0,0,0], std=[1/0.229, 1/0.224, 1/0.225]),
-        transforms.Normalize(mean=[-0.485, -0.456, -0.406], std=[1,1,1]),
-    ])
-    if t.min()<0:
-        t = inverse_transform(t)
-    if t.size(0) == 3:
-        t = t.permute(1, 2, 0)
-    return t
+def binarize_image(np_img):
+    _, otsu_gauss= cv2.threshold(cv2.GaussianBlur(np_img,(5,5),0),0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+    return otsu_gauss
 
-def show_tensor(tensor):
-    tensor = showable(tensor)
-    plt.imshow(tensor)
-    plt.axis('off')  # Hide axis
-    plt.show()
+def aspect(x):
+    a,b = PIL.Image.open(x).size
+    return a/b
+    
+def ds_mean_aspect(ds):
+    #return [aspect(x) for x,_ in ds]
+    return np.mean([aspect(x) for x,_ in ds]).item()
 
-def show_pair(e):
-    fig, axes = plt.subplots(1, 2, figsize=(10, 2), facecolor='white')
-    for ax,x in zip(axes,e[:2]):
-        if isinstance(x,str):
-            img = plt.cm.gray(mpimg.imread(x))
-        elif isinstance(x,torch.Tensor):
-            img = showable(x)
-        else:
-            img = x
-        ax.imshow(img)
-        ax.axis('off')  # Hide axes for a cleaner look
-    plt.suptitle(['Mismatch','Match'][e[2]], fontsize=16)
-    plt.tight_layout()
-    plt.show() 
+def get_device():
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
+    return device
 
+def get_y_vocab(ds):
+    itos = list(set(y for _,y in ds))
+    stoi = {y:i for i,y in enumerate(itos)}
+    return itos, stoi
 

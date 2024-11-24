@@ -3,6 +3,45 @@ import PIL
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+import torch
+import torchvision.transforms as transforms
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+
+# Make a tensor ready to be displayed
+def showable(t):
+    t = t.detach().cpu()
+    # it assumes it was normalized with Imagenet stats
+    inverse_transform = transforms.Compose([
+        transforms.Normalize(mean=[0,0,0], std=[1/0.229, 1/0.224, 1/0.225]),
+        transforms.Normalize(mean=[-0.485, -0.456, -0.406], std=[1,1,1]),
+    ])
+    if t.min()<0:
+        t = inverse_transform(t)
+    if t.size(0) == 3:
+        t = t.permute(1, 2, 0)
+    return t
+
+def show_tensor(tensor):
+    tensor = showable(tensor)
+    plt.imshow(tensor)
+    plt.axis('off')  # Hide axis
+    plt.show()
+
+def show_pair(e):
+    fig, axes = plt.subplots(1, 2, figsize=(10, 2), facecolor='white')
+    for ax,x in zip(axes,e[:2]):
+        if isinstance(x,str):
+            img = plt.cm.gray(mpimg.imread(x))
+        elif isinstance(x,torch.Tensor):
+            img = showable(x)
+        else:
+            img = x
+        ax.imshow(img)
+        ax.axis('off')  # Hide axes for a cleaner look
+    plt.suptitle(['Mismatch','Match'][e[2]==e[3]], fontsize=16)
+    plt.tight_layout()
+    plt.show() 
 
 def show_grid(images, subtitles, figsize):
     rows = len(images)
@@ -10,12 +49,25 @@ def show_grid(images, subtitles, figsize):
     fig, axes = plt.subplots(rows, cols, figsize=(cols * figsize[0], rows * figsize[1]))
     for i in range(rows):
         for j in range(cols):
-            axes[i, j].imshow(images[i][j], cmap='gray')
+            axes[i, j].imshow(showable(images[i][j]), cmap='gray')
             axes[i, j].set_title(subtitles[i][j], fontsize=10)
             axes[i, j].axis('off')
     plt.tight_layout()
     plt.show()
     return fig
+
+def show_pair_batch(x1 , x2, y1, y2, columns=8):
+    batch_size, channel_size, height, width = x1.shape
+    assert batch_size % columns == 0, f"Columns ({columns}) must be a divisor of batch_size ({batch_size})"
+    images = torch.stack([x1, x2], dim=2).view(batch_size, channel_size, height*2, width)
+    images = images.view(-1, columns, channel_size, height*2, width)
+    labels = (y1==y2)
+    subtitles = [ [ ['Missmatch', 'Match'][x] for x in xs] for xs in labels.view(-1,columns).tolist() ]
+    show_grid(images, subtitles, (2,2))
+
+def show_batch_images(x, images_per_row=8):
+    B,C,H,W = x.shape
+    show_tensor(x.view(-1,images_per_row,C,H,W).permute(2,0,3,1,4).reshape(C,H*B//images_per_row,W*images_per_row))
 
 def mark_img(img, x, y,w=7, c=0):
     """ 
